@@ -1,0 +1,17 @@
+# Local variable files with credentials
+*.yml.local
+my_vars.yml
+vars.yml
+secrets.yml
+
+# Local inventory files
+inventory.ini
+inventory.yaml
+inventory/
+
+# Rendered output
+output/
+/tmp/
+
+# Ansible retry files
+*.retry

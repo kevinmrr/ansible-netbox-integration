@@ -1,0 +1,56 @@
+---
+- hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Get device information from NetBox
+      uri:
+        url: "{{ netbox_url }}/api/dcim/devices/{{ device_name }}/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        return_content: yes
+      register: device_response
+
+    - name: Extract device information
+      set_fact:
+        device_info: "{{ device_response.json }}"
+
+    - name: Display device information
+      debug:
+        var: device_info
+
+    - name: Get interface information from NetBox
+      uri:
+        url: "{{ netbox_url }}/api/dcim/interfaces/?device_id={{ device_info.id }}"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        return_content: yes
+      register: interfaces_response
+
+    - name: Extract interface information
+      set_fact:
+        interfaces_info: "{{ interfaces_response.json.results }}"
+
+    - name: Get IP address information from NetBox IPAM
+      uri:
+        url: "{{ netbox_url }}/api/ipam/ip-addresses/?device_id={{ device_info.id }}"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        return_content: yes
+      register: ip_response
+
+    - name: Extract IP address information
+      set_fact:
+        ip_addresses: "{{ ip_response.json.results | map(attribute='address') | list }}"
+
+    - name: Create configuration file using Jinja2 template
+      template:
+        src: templates/device_config.j2
+        dest: "/tmp/{{ device_name }}_config.txt"
+        mode: '0644'
+      vars:
+        hostname: "{{ device_info.name }}"
+        ip_addresses: "{{ ip_addresses }}"

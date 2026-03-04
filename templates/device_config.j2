@@ -1,0 +1,6 @@
+# Device Configuration Template
+Hostname: {{ hostname }}
+IP Addresses: 
+{% for ip in ip_addresses %}
+  - {{ ip }}
+{% endfor %}
